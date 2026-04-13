@@ -1,0 +1,120 @@
+<!doctype html><html lang=en><head><meta name=generator content="Hugo 0.160.1"><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Quack — Systems Programming Language</title><meta name=description content="Memory safety and performance, without GC or lifetime annotations."><link rel=stylesheet href=/css/main.css><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel=stylesheet></head><body><nav class=site-nav><div class=nav-inner><a href=/ class=nav-logo><span class=nav-logo-mark>Q</span>
+<span class=nav-logo-text>Quack</span></a><div class=nav-links><a href=#principles>Principles</a>
+<a href=#taste>Code</a>
+<a href=#status>Status</a></div></div></nav><main><section class=hero><div class=hero-logo><img src=/images/quack.png alt=Quack class=hero-mascot></div><h1>A systems language that<br><span class=accent>gets out of your way</span>.</h1><p class=tagline>Memory safety, deterministic cleanup, and compile-time data race prevention.
+No garbage collector. No lifetime annotations.
+A mental model small enough to hold in your head.</p><a href=#principles class="btn btn-primary">What we believe</a></section><section id=principles><div class=section-head><h2>What Quack is for</h2><p>Every design decision flows from these principles.</p></div><div class=holding-text><div class=principles><div class=principle><div><h3>The language should disappear</h3><p>If you're thinking about Quack instead of your problem, the language has failed.
+Every syntax, every rule, every diagnostic is evaluated against this.</p></div></div><div class=principle><div><h3>Reject, don't tax</h3><p>When the compiler can't prove safety, it rejects the code and explains why.
+It never silently inserts allocations. But it also doesn't demand ceremony
+that carries no information.</p></div></div><div class=principle><div><h3>One obvious way</h3><p>One ownership model. One error model. One concurrency model.
+Measured from the programmer's intent, not the compiler's internals.
+If a newcomer can't read it, redesign the syntax.</p></div></div><div class=principle><div><h3>Diagnostics are part of the language</h3><p>Every rule must produce a clear, actionable error message. If a rule
+can't explain itself simply, the rule is too complex and must be redesigned.</p></div></div><div class=principle><div><h3>Make costs visible, not ceremony</h3><p>If it costs something and you have a choice, it's visible in syntax.
+If it's free, or if there's no alternative, it's silent.
+Cognitive cost counts too.</p></div></div></div></div></section><section id=features><div class=section-head><h2>What that means in practice</h2></div><div class=feature-grid><div class=feature-card><h3>Capabilities, not lifetimes</h3><p>Three words describe how every function uses its arguments: <code>read</code> for shared
+read-only access, <code>mut</code> for exclusive mutation, <code>take</code> for ownership
+transfer. The compiler checks the rest. You write zero lifetime annotations — not fewer, none.</p></div><div class=feature-card><h3>Errors are return types</h3><p><code>Config or IOError or ParseError</code> — the return type is the error contract.
+<code>return</code> for success, <code>error</code> for failure.
+No wrappers, no exceptions, no hidden control flow.</p></div><div class=feature-card><h3>Any function, any thread</h3><p>Any function can run concurrently — you don't mark functions as special.
+No <code>async</code>/<code>await</code>, no splitting your codebase into two worlds.
+A work-stealing green thread scheduler handles the rest.</p></div><div class=feature-card><h3>Words over symbols</h3><p><code>and</code>/<code>or</code>/<code>not</code> instead of <code>&&</code>/<code>||</code>/<code>!</code>.
+Square brackets for generics. Dot-paths for modules.
+Readable without prior Quack knowledge.</p></div><div class=feature-card><h3>No null</h3><p>Absence is <code>T or None</code> — a union type. The compiler forces
+narrowing before use. No null pointer dereferences, ever.</p></div><div class=feature-card><h3>Native performance</h3><p>Compiled to native code via LLVM. Memory is freed the moment ownership ends —
+no garbage collector, no pauses, no latency spikes. Platform-native async I/O
+under the hood.</p></div></div></section><section id=taste><div class=section-head><h2>What it looks like</h2></div><div class=sbs><div class=sbs-header><h3>Ownership without lifetime annotations</h3><p>Rust needs lifetime parameters to track how long references live. Quack infers it.</p></div><div class=sbs-pair><div class=sbs-block><span class=code-label>Rust</span><pre><code class=rust><span class=kw>fn</span> <span class=func>first_word</span><span class=op>&lt;</span><span class=lifetime>'a</span><span class=op>&gt;</span>(s: <span class=op>&amp;</span><span class=lifetime>'a</span> <span class=type>str</span>) <span class=op>-&gt;</span> <span class=op>&amp;</span><span class=lifetime>'a</span> <span class=type>str</span> {
+    <span class=kw>match</span> s.<span class=func>find</span>(<span class=str>' '</span>) {
+        <span class=type>Some</span>(i) <span class=op>=&gt;</span> <span class=op>&amp;</span>s[..i],
+        <span class=type>None</span> <span class=op>=&gt;</span> s,
+    }
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>first_word</span>(s: <span class=type>String</span>) <span class=op>-></span> <span class=kw>read</span> <span class=type>String</span> {
+    <span class=kw>match</span> s.<span class=func>find</span>(<span class=str>' '</span>) {
+        <span class=kw>is</span> <span class=type>Int</span>(i) <span class=op>-></span> <span class=kw>return</span> s.<span class=func>slice</span>(<span class=num>0</span>, i)
+        <span class=kw>is</span> <span class=type>None</span> <span class=op>-></span> <span class=kw>return</span> s
+    }
+}</code></pre></div></div></div><div class=sbs><div class=sbs-header><h3>Error handling without boilerplate</h3><p>Go checks errors explicitly but the pattern is repetitive. Quack's return unions
+make errors part of the type, with <code>otherwise</code> for propagation.</p></div><div class=sbs-pair><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>loadConfig</span>(path <span class=type>string</span>) (<span class=type>Config</span>, <span class=type>error</span>) {
+    text, err <span class=op>:=</span> os.<span class=func>ReadFile</span>(path)
+    <span class=kw>if</span> err <span class=op>!=</span> <span class=type>nil</span> {
+        <span class=kw>return</span> <span class=type>Config</span>{}, err
+    }
+    <span class=kw>var</span> cfg <span class=type>Config</span>
+    err <span class=op>=</span> toml.<span class=func>Unmarshal</span>(text, <span class=op>&amp;</span>cfg)
+    <span class=kw>if</span> err <span class=op>!=</span> <span class=type>nil</span> {
+        <span class=kw>return</span> <span class=type>Config</span>{}, err
+    }
+    <span class=kw>return</span> cfg, <span class=type>nil</span>
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>Path</span>)
+    <span class=op>-></span> <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span>
+{
+    <span class=kw>let</span> text <span class=op>=</span> <span class=func>read_file</span>(path)
+        <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+    <span class=kw>let</span> config <span class=op>=</span> <span class=type>Toml</span>.<span class=func>parse</span>[<span class=type>Config</span>](text)
+        <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+    <span class=kw>return</span> config
+}</code></pre></div></div></div><div class=sbs><div class=sbs-header><h3>Concurrency without async/await</h3><p>Rust marks functions <code>async</code> and splits your codebase in two. Go gives
+you goroutines but no compile-time data race prevention. Quack has green threads
+with structured concurrency — any function can run concurrently, and the compiler
+rules out data races at compile time.</p></div><div class=sbs-triple><div class=sbs-block><span class=code-label>Rust</span><pre><code class=rust><span class=kw>async fn</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span><span class=op>&lt;</span><span class=type>String</span><span class=op>&gt;</span>)
+    <span class=op>-&gt;</span> <span class=type>Result</span><span class=op>&lt;</span><span class=type>Vec</span><span class=op>&lt;</span><span class=type>Response</span><span class=op>&gt;</span>, <span class=type>Error</span><span class=op>&gt;</span>
+{
+    <span class=kw>let</span> futs <span class=op>=</span> urls.<span class=func>into_iter</span>()
+        .<span class=func>map</span>(|u| <span class=func>tokio</span>::<span class=func>spawn</span>(
+            <span class=func>fetch</span>(u)
+        ));
+    <span class=kw>let</span> results <span class=op>=</span>
+        <span class=func>join_all</span>(futs).<span class=kw>await</span>;
+    results.<span class=func>into_iter</span>()
+        .<span class=func>map</span>(|r| r<span class=op>?</span>
+            .<span class=func>map_err</span>(<span class=type>Error</span>::<span class=func>from</span>))
+        .<span class=func>collect</span>()
+}</code></pre></div><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>fetchAll</span>(urls []<span class=type>string</span>) (
+    []<span class=type>Response</span>, <span class=type>error</span>,
+) {
+    <span class=kw>var</span> wg sync.<span class=type>WaitGroup</span>
+    <span class=kw>var</span> mu sync.<span class=type>Mutex</span>
+    results <span class=op>:=</span> <span class=func>make</span>([]<span class=type>Response</span>, <span class=num>0</span>)
+    <span class=kw>var</span> firstErr <span class=type>error</span>
+    <span class=kw>for</span> _, u <span class=op>:=</span> <span class=kw>range</span> urls {
+        wg.<span class=func>Add</span>(<span class=num>1</span>)
+        <span class=kw>go</span> <span class=kw>func</span>(url <span class=type>string</span>) {
+            <span class=kw>defer</span> wg.<span class=func>Done</span>()
+            r, err <span class=op>:=</span> <span class=func>fetch</span>(url)
+            mu.<span class=func>Lock</span>()
+            <span class=kw>defer</span> mu.<span class=func>Unlock</span>()
+            <span class=kw>if</span> err <span class=op>!=</span> <span class=type>nil</span> {
+                firstErr <span class=op>=</span> err
+            } <span class=kw>else</span> {
+                results <span class=op>=</span> <span class=func>append</span>(
+                    results, r)
+            }
+        }(u)
+    }
+    wg.<span class=func>Wait</span>()
+    <span class=kw>return</span> results, firstErr
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span>[<span class=type>String</span>])
+    <span class=op>-></span> <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span>
+{
+    <span class=kw>let</span> results <span class=op>=</span> <span class=type>Mutex</span>.<span class=func>new</span>(<span class=type>Vec</span>[<span class=type>Response</span>]())
+    <span class=kw>parallel</span> {
+        <span class=kw>for</span> url <span class=kw>in</span> urls {
+            <span class=kw>let</span> r <span class=op>=</span> <span class=func>fetch</span>(url)
+                <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+            results.<span class=func>lock</span>().<span class=func>push</span>(r)
+        }
+    }
+    <span class=kw>return</span> results.<span class=func>into_inner</span>()
+}</code></pre></div></div></div></section><section id=guarantees><div class=holding-text><p class=thesis-statement>Quack narrows expressiveness to shrink the mental model. Some patterns
+are intentionally inexpressible. The tradeoff: you can hold the entire
+language in your head, and the compiler handles the verification.</p><div class=thesis-guarantees><span>No use-after-free</span>
+<span>No data races</span>
+<span>No null</span>
+<span>No GC</span>
+<span>No lifetime annotations</span>
+<span>No function colouring</span>
+<span>Deterministic cleanup</span></div></div></section><section id=status><div class=section-head><h2>Where we are</h2></div><div class=holding-text><p>The bootstrap compiler (written in Rust) compiles Quack programs to native
+binaries via LLVM. The core language works — ownership, capabilities, error
+handling, pattern matching, generics, interfaces. We're fixing edge cases in
+ownership codegen and building out the standard library.</p><p>The runtime will use platform-native I/O (io_uring on Linux, kqueue on macOS,
+IOCP on Windows) with a work-stealing green thread scheduler. The compiler,
+specification, and all documentation will be open-sourced when the repo goes public.</p><p style=margin-top:1.5rem;text-align:center><a href=mailto:hello@quacklang.org class="btn btn-primary">Get in touch</a></p></div></section></main><footer class=site-footer><div class=footer-inner><p>Quack is in active development.</p><p class=footer-links><a href=mailto:hello@quacklang.org>Contact</a></p></div></footer></body></html>
