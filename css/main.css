@@ -78,27 +78,20 @@ a:hover { text-decoration: underline; }
 .nav-logo:hover { text-decoration: none; }
 
 .nav-logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 28px;
   height: 28px;
-  background: var(--accent);
-  color: var(--bg);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 1rem;
   border-radius: 6px;
+  object-fit: contain;
 }
 
 .nav-links {
   display: flex;
   gap: 1.5rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
-.nav-links a { color: var(--text-muted); }
-.nav-links a:hover { color: var(--text); text-decoration: none; }
+.nav-links a { color: var(--text); font-weight: 500; }
+.nav-links a:hover { color: var(--accent); text-decoration: none; }
 
 .nav-gh {
   padding: 0.3rem 0.8rem;
@@ -290,53 +283,94 @@ p code, li code, td code {
 
 .status-banner strong { color: var(--accent); }
 
-/* ---- side-by-side comparisons ---- */
-.sbs {
-  margin-bottom: 3rem;
+/* ---- landing page content ---- */
+.landing-content {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-.sbs-header {
-  margin-bottom: 1rem;
+.landing-content > h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+  margin: 4rem 0 2rem;
 }
 
-.sbs-header h3 {
+.landing-content > h3 {
   font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
+  margin: 3rem 0 0.75rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.sbs-header p {
+.landing-content > p {
   font-size: 0.9rem;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
   max-width: 700px;
+  margin: 0 auto 1rem;
 }
 
-.sbs-pair,
-.sbs-triple {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.sbs-block {
-  max-width: 640px;
-  width: 100%;
-}
-
-.sbs-block pre {
-  margin: 0;
+/* code blocks with language labels */
+.landing-content pre {
+  min-width: 640px;
+  max-width: 700px;
+  margin: 0 auto 1rem;
   font-size: 0.8rem;
   line-height: 1.65;
+  position: relative;
 }
 
-.sbs-note {
-  max-width: 640px;
-  margin: 1rem auto 0;
+.landing-content pre code[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: -0.1rem;
+  right: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+/* ---- borderless feature table ---- */
+.landing-content table {
+  border-collapse: separate;
+  border-spacing: 0.5rem;
+  table-layout: fixed;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto 2rem;
+}
+
+.landing-content table thead { display: none; }
+
+.landing-content table td {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
   font-size: 0.85rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
+  vertical-align: top;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-weight: 400;
+}
+
+.landing-content table td strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text);
 }
 
 /* Rust syntax highlighting */
@@ -351,6 +385,7 @@ p code, li code, td code {
 .rust .field    { color: #e6edf3; }
 .rust .enum-v   { color: #7ee787; }
 
+/* section-head kept for non-landing pages */
 .section-head {
   text-align: center;
   margin-bottom: 1rem;
@@ -543,40 +578,61 @@ tr:last-child td { border-bottom: none; }
   font-weight: 600;
 }
 
-/* ---- principles ---- */
-.principles {
+/* ---- principles (styled ordered list) ---- */
+.landing-content ol {
   counter-reset: principle;
+  list-style: none;
+  padding: 0;
+  max-width: 640px;
+  margin: 0 auto 2rem;
 }
 
-.principle {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem 0;
+.landing-content ol li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0 1.25rem;
+  padding: 1.25rem 0;
   border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  position: relative;
 }
 
-.principle:last-child { border-bottom: none; }
+.landing-content ol li:last-child { border-bottom: none; }
 
-.principle::before {
+.landing-content ol li::before {
   counter-increment: principle;
-  content: "P" counter(principle);
+  content: "PRINCIPLE";
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-align: center;
+  grid-row: 1 / 3;
+  padding-top: 0.2rem;
+}
+
+.landing-content ol li::after {
+  content: counter(principle);
+  position: absolute;
+  left: 0;
+  top: 2rem;
+  width: 4.5rem;
+  font-family: var(--font-mono);
+  font-size: 3rem;
   font-weight: 700;
   color: var(--accent);
-  min-width: 2.5rem;
-  padding-top: 0.15rem;
+  text-align: center;
 }
 
-.principle h3 {
+.landing-content ol li strong {
+  display: block;
+  color: var(--text);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-}
-
-.principle p {
-  font-size: 0.9rem;
-  color: var(--text-muted);
 }
 
 /* ---- footer ---- */
@@ -718,24 +774,36 @@ tr:last-child td { border-bottom: none; }
   margin-bottom: 0.25rem;
 }
 
-/* ---- thesis ---- */
-.thesis-statement {
+/* ---- thesis / guarantees ---- */
+.landing-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3rem auto;
+  max-width: 700px;
+}
+
+.landing-content hr + p {
   font-size: 1.1rem;
   color: var(--text);
   line-height: 1.7;
   text-align: center;
   font-weight: 500;
+  max-width: 700px;
+  margin: 0 auto 1rem;
 }
 
-.thesis-guarantees {
+.landing-content ul {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.6rem;
-  margin-top: 1.5rem;
+  margin: 1.5rem auto 2rem;
+  list-style: none;
+  padding: 0;
+  max-width: 700px;
 }
 
-.thesis-guarantees span {
+.landing-content ul li {
   display: inline-block;
   padding: 0.35rem 0.85rem;
   font-size: 0.8rem;
@@ -759,36 +827,7 @@ tr:last-child td { border-bottom: none; }
   margin-bottom: 1rem;
 }
 
-/* ---- feature grid ---- */
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 2rem;
-  max-width: 760px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.feature-card {
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-card);
-}
-
-.feature-card h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  color: var(--text);
-}
-
-.feature-card p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
+/* feature grid (old shortcode) - kept for reference pages */
 
 /* ---- status grid ---- */
 .status-grid {
