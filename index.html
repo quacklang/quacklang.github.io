@@ -119,7 +119,7 @@
       <h3>Any function, any thread</h3>
       <p>Any function can run concurrently — you don't mark functions as special.
          No <code>async</code>/<code>await</code>, no splitting your codebase into two worlds.
-         A work-stealing green thread scheduler handles the rest.</p>
+         Green threads and a runtime scheduler handle the rest.</p>
     </div>
     <div class="feature-card">
       <h3>Words over symbols</h3>
@@ -129,14 +129,14 @@
     </div>
     <div class="feature-card">
       <h3>No null</h3>
-      <p>Absence is <code>T or None</code> — a union type. The compiler forces
-         narrowing before use. No null pointer dereferences, ever.</p>
+      <p>Absence is <code>T or None</code> — a union type. The compiler won't let
+         you use the value until you've checked which type it actually is
+         (narrowing). No null pointer dereferences, ever.</p>
     </div>
     <div class="feature-card">
       <h3>Native performance</h3>
       <p>Compiled to native code via LLVM. Memory is freed the moment ownership ends —
-         no garbage collector, no pauses, no latency spikes. Platform-native async I/O
-         under the hood.</p>
+         no garbage collector, no pauses, no latency spikes.</p>
     </div>
   </div>
 </section>
@@ -183,8 +183,8 @@
   <div class="sbs">
     <div class="sbs-header">
       <h3>Error handling without boilerplate</h3>
-      <p>Go checks errors explicitly but the pattern is repetitive. Quack's return unions
-         make errors part of the type, with <code>otherwise</code> for propagation.</p>
+      <p>Go checks errors explicitly but the pattern is repetitive. In Quack the return
+         type declares every possible outcome, with <code>otherwise</code> for propagation.</p>
     </div>
     <div class="sbs-pair">
       <div class="sbs-block">
@@ -222,9 +222,9 @@
     <div class="sbs-header">
       <h3>Concurrency without async/await</h3>
       <p>Rust marks functions <code>async</code> and splits your codebase in two. Go gives
-         you goroutines but no compile-time data race prevention. Quack has green threads
-         with structured concurrency — any function can run concurrently, and the compiler
-         rules out data races at compile time.</p>
+         you goroutines but no compile-time data race prevention. Quack uses green threads
+         where all tasks are scoped to their parent (structured concurrency) — any function
+         can run concurrently, and the compiler rules out data races at compile time.</p>
     </div>
     <div class="sbs-triple">
       <div class="sbs-block">
@@ -298,7 +298,7 @@
       <span>No null</span>
       <span>No GC</span>
       <span>No lifetime annotations</span>
-      <span>No function colouring</span>
+      <span>No async/await split</span>
       <span>Deterministic cleanup</span>
     </div>
   </div>
@@ -313,14 +313,19 @@
   <div class="holding-text">
     <p>
       The bootstrap compiler (written in Rust) compiles Quack programs to native
-      binaries via LLVM. The core language works — ownership, capabilities, error
-      handling, pattern matching, generics, interfaces. We're fixing edge cases in
-      ownership codegen and building out the standard library.
+      binaries via LLVM. The core language works: ownership, capabilities, error
+      handling, pattern matching, generics, interfaces, and multi-file projects.
+      106 of 124 validation programs compile and run correctly.
     </p>
     <p>
-      The runtime will use platform-native I/O (io_uring on Linux, kqueue on macOS,
-      IOCP on Windows) with a work-stealing green thread scheduler. The compiler,
-      specification, and all documentation will be open-sourced when the repo goes public.
+      Current work: completing the type system (reflection, <code>derive</code>,
+      <code>shared</code> reference counting) and closing correctness gaps in
+      generic code and collection ownership. The concurrency runtime and standard
+      library come after the type system is solid.
+    </p>
+    <p>
+      The compiler, specification, and all documentation will be open-sourced
+      when the repo goes public.
     </p>
     <p style="margin-top: 1.5rem; text-align: center;">
       <a href="mailto:markjallen9@gmail.com" class="btn btn-primary">Get in touch</a>
