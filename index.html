@@ -44,7 +44,7 @@ make errors part of the type, with <code>otherwise</code> for propagation.</p></
         <span class=kw>return</span> <span class=type>Config</span>{}, err
     }
     <span class=kw>return</span> cfg, <span class=type>nil</span>
-}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>Path</span>)
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>String</span>)
     <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span>
 {
     <span class=kw>let</span> text <span class=op>=</span> <span class=func>read_file</span>(path)
@@ -96,14 +96,16 @@ rules out data races at compile time.</p></div><div class=sbs-triple><div class=
     <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span>
 {
     <span class=kw>let</span> results <span class=op>=</span> <span class=type>Mutex</span>.<span class=func>new</span>(<span class=type>Vec</span>[<span class=type>Response</span>]())
-    <span class=kw>parallel</span> {
+    <span class=kw>parallel</span>(p) {
         <span class=kw>for</span> url <span class=kw>in</span> urls {
-            <span class=kw>let</span> r <span class=op>=</span> <span class=func>fetch</span>(url)
-                <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
-            results.<span class=func>lock</span>().<span class=func>push</span>(r)
+            p.<span class=func>spawn</span> {
+                <span class=kw>let</span> r <span class=op>=</span> <span class=func>fetch</span>(url)
+                    <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+                results.<span class=func>lock</span>().<span class=func>push</span>(r)
+            }
         }
     }
-    <span class=kw>return</span> results.<span class=func>into_inner</span>()
+    <span class=kw>return</span> <span class=kw>copy</span> results.<span class=func>lock</span>()
 }</code></pre></div></div></div></section><section id=guarantees><div class=holding-text><p class=thesis-statement>Quack narrows expressiveness to shrink the mental model. Some patterns
 are intentionally inexpressible. The tradeoff: you can hold the entire
 language in your head, and the compiler handles the verification.</p><div class=thesis-guarantees><span>No use-after-free</span>
