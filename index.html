@@ -27,10 +27,10 @@ under the hood.</p></div></div></section><section id=taste><div class=section-he
         <span class=type>Some</span>(i) <span class=op>=&gt;</span> <span class=op>&amp;</span>s[..i],
         <span class=type>None</span> <span class=op>=&gt;</span> s,
     }
-}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>first_word</span>(s: <span class=type>String</span>) <span class=op>-></span> <span class=kw>read</span> <span class=type>String</span> {
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>first_word</span>(s: <span class=type>String</span>) <span class=kw>read</span> <span class=type>String</span> {
     <span class=kw>match</span> s.<span class=func>find</span>(<span class=str>' '</span>) {
-        <span class=kw>is</span> <span class=type>Int</span>(i) <span class=op>-></span> <span class=kw>return</span> s.<span class=func>slice</span>(<span class=num>0</span>, i)
-        <span class=kw>is</span> <span class=type>None</span> <span class=op>-></span> <span class=kw>return</span> s
+        i: <span class=type>Int</span> <span class=kw>then</span> <span class=kw>return</span> s.<span class=func>slice</span>(<span class=num>0</span>, i),
+        <span class=kw>none</span> <span class=kw>then</span> <span class=kw>return</span> s,
     }
 }</code></pre></div></div></div><div class=sbs><div class=sbs-header><h3>Error handling without boilerplate</h3><p>Go checks errors explicitly but the pattern is repetitive. Quack's return unions
 make errors part of the type, with <code>otherwise</code> for propagation.</p></div><div class=sbs-pair><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>loadConfig</span>(path <span class=type>string</span>) (<span class=type>Config</span>, <span class=type>error</span>) {
@@ -45,7 +45,7 @@ make errors part of the type, with <code>otherwise</code> for propagation.</p></
     }
     <span class=kw>return</span> cfg, <span class=type>nil</span>
 }</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>Path</span>)
-    <span class=op>-></span> <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span>
+    <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span>
 {
     <span class=kw>let</span> text <span class=op>=</span> <span class=func>read_file</span>(path)
         <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
@@ -93,7 +93,7 @@ rules out data races at compile time.</p></div><div class=sbs-triple><div class=
     wg.<span class=func>Wait</span>()
     <span class=kw>return</span> results, firstErr
 }</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span>[<span class=type>String</span>])
-    <span class=op>-></span> <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span>
+    <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span>
 {
     <span class=kw>let</span> results <span class=op>=</span> <span class=type>Mutex</span>.<span class=func>new</span>(<span class=type>Vec</span>[<span class=type>Response</span>]())
     <span class=kw>parallel</span> {
