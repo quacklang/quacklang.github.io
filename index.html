@@ -32,7 +32,10 @@ under the hood.</p></div></div></section><section id=taste><div class=section-he
         i: <span class=type>Int</span> <span class=kw>then</span> <span class=kw>return</span> s.<span class=func>slice</span>(<span class=num>0</span>, i),
         <span class=kw>none</span> <span class=kw>then</span> <span class=kw>return</span> s,
     }
-}</code></pre></div></div></div><div class=sbs><div class=sbs-header><h3>Error handling without boilerplate</h3><p>Go checks errors explicitly but the pattern is repetitive. Quack's return unions
+}</code></pre></div></div><p class=sbs-note>Rust's <code>'a</code> annotation proves the returned reference
+doesn't outlive the source string. Quack's <code>read</code> carries the same
+guarantee — the compiler tracks the relationship internally. Zero
+lifetime annotations, not fewer.</p></div><div class=sbs><div class=sbs-header><h3>Error handling without boilerplate</h3><p>Go checks errors explicitly but the pattern is repetitive. Quack's return unions
 make errors part of the type, with <code>otherwise</code> for propagation.</p></div><div class=sbs-pair><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>loadConfig</span>(path <span class=type>string</span>) (<span class=type>Config</span>, <span class=type>error</span>) {
     text, err <span class=op>:=</span> os.<span class=func>ReadFile</span>(path)
     <span class=kw>if</span> err <span class=op>!=</span> <span class=type>nil</span> {
@@ -44,33 +47,21 @@ make errors part of the type, with <code>otherwise</code> for propagation.</p></
         <span class=kw>return</span> <span class=type>Config</span>{}, err
     }
     <span class=kw>return</span> cfg, <span class=type>nil</span>
-}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>String</span>)
-    <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span>
-{
-    <span class=kw>let</span> text <span class=op>=</span> <span class=func>read_file</span>(path)
-        <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
-    <span class=kw>let</span> config <span class=op>=</span> <span class=type>Toml</span>.<span class=func>parse</span>[<span class=type>Config</span>](text)
-        <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>load_config</span>(path: <span class=type>String</span>) <span class=type>Config</span> <span class=kw>or</span> <span class=type>IOError</span> <span class=kw>or</span> <span class=type>ParseError</span> {
+    <span class=kw>let</span> text <span class=op>=</span> <span class=func>read_file</span>(path) <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+    <span class=kw>let</span> config <span class=op>=</span> <span class=type>Toml</span>.<span class=func>parse</span>[<span class=type>Config</span>](text) <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
     <span class=kw>return</span> config
-}</code></pre></div></div></div><div class=sbs><div class=sbs-header><h3>Concurrency without async/await</h3><p>Rust marks functions <code>async</code> and splits your codebase in two. Go gives
+}</code></pre></div></div><p class=sbs-note>The return type <em>is</em> the error contract — <code>Config or IOError or ParseError</code>
+says exactly what can come back. No wrapper types, no <code>Ok()</code>/<code>Err()</code>.
+<code>otherwise pass back</code> does what Go's three-line
+<code>if err != nil</code> block does — in three words.</p></div><div class=sbs><div class=sbs-header><h3>Concurrency without async/await</h3><p>Rust marks functions <code>async</code> and splits your codebase in two. Go gives
 you goroutines but no compile-time data race prevention. Quack has green threads
 with structured concurrency — any function can run concurrently, and the compiler
-rules out data races at compile time.</p></div><div class=sbs-triple><div class=sbs-block><span class=code-label>Rust</span><pre><code class=rust><span class=kw>async fn</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span><span class=op>&lt;</span><span class=type>String</span><span class=op>&gt;</span>)
-    <span class=op>-&gt;</span> <span class=type>Result</span><span class=op>&lt;</span><span class=type>Vec</span><span class=op>&lt;</span><span class=type>Response</span><span class=op>&gt;</span>, <span class=type>Error</span><span class=op>&gt;</span>
-{
-    <span class=kw>let</span> futs <span class=op>=</span> urls.<span class=func>into_iter</span>()
-        .<span class=func>map</span>(|u| <span class=func>tokio</span>::<span class=func>spawn</span>(
-            <span class=func>fetch</span>(u)
-        ));
-    <span class=kw>let</span> results <span class=op>=</span>
-        <span class=func>join_all</span>(futs).<span class=kw>await</span>;
-    results.<span class=func>into_iter</span>()
-        .<span class=func>map</span>(|r| r<span class=op>?</span>
-            .<span class=func>map_err</span>(<span class=type>Error</span>::<span class=func>from</span>))
-        .<span class=func>collect</span>()
-}</code></pre></div><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>fetchAll</span>(urls []<span class=type>string</span>) (
-    []<span class=type>Response</span>, <span class=type>error</span>,
-) {
+rules out data races at compile time.</p></div><div class=sbs-triple><div class=sbs-block><span class=code-label>Rust</span><pre><code class=rust><span class=kw>async fn</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span><span class=op>&lt;</span><span class=type>String</span><span class=op>&gt;</span>) <span class=op>-&gt;</span> <span class=type>Result</span><span class=op>&lt;</span><span class=type>Vec</span><span class=op>&lt;</span><span class=type>Response</span><span class=op>&gt;</span>, <span class=type>Error</span><span class=op>&gt;</span> {
+    <span class=kw>let</span> futs <span class=op>=</span> urls.<span class=func>into_iter</span>().<span class=func>map</span>(|u| <span class=func>tokio</span>::<span class=func>spawn</span>(<span class=func>fetch</span>(u)));
+    <span class=kw>let</span> results <span class=op>=</span> <span class=func>join_all</span>(futs).<span class=kw>await</span>;
+    results.<span class=func>into_iter</span>().<span class=func>map</span>(|r| r<span class=op>?</span>.<span class=func>map_err</span>(<span class=type>Error</span>::<span class=func>from</span>)).<span class=func>collect</span>()
+}</code></pre></div><div class=sbs-block><span class=code-label>Go</span><pre><code class=rust><span class=kw>func</span> <span class=func>fetchAll</span>(urls []<span class=type>string</span>) ([]<span class=type>Response</span>, <span class=type>error</span>) {
     <span class=kw>var</span> wg sync.<span class=type>WaitGroup</span>
     <span class=kw>var</span> mu sync.<span class=type>Mutex</span>
     results <span class=op>:=</span> <span class=func>make</span>([]<span class=type>Response</span>, <span class=num>0</span>)
@@ -85,28 +76,28 @@ rules out data races at compile time.</p></div><div class=sbs-triple><div class=
             <span class=kw>if</span> err <span class=op>!=</span> <span class=type>nil</span> {
                 firstErr <span class=op>=</span> err
             } <span class=kw>else</span> {
-                results <span class=op>=</span> <span class=func>append</span>(
-                    results, r)
+                results <span class=op>=</span> <span class=func>append</span>(results, r)
             }
         }(u)
     }
     wg.<span class=func>Wait</span>()
     <span class=kw>return</span> results, firstErr
-}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span>[<span class=type>String</span>])
-    <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span>
-{
+}</code></pre></div><div class=sbs-block><span class=code-label>Quack</span><pre><code class=q><span class=kw>func</span> <span class=func>fetch_all</span>(urls: <span class=type>Vec</span>[<span class=type>String</span>]) <span class=type>Vec</span>[<span class=type>Response</span>] <span class=kw>or</span> <span class=type>Error</span> {
     <span class=kw>let</span> results <span class=op>=</span> <span class=type>Mutex</span>.<span class=func>new</span>(<span class=type>Vec</span>[<span class=type>Response</span>]())
     <span class=kw>parallel</span>(p) {
         <span class=kw>for</span> url <span class=kw>in</span> urls {
             p.<span class=func>spawn</span> {
-                <span class=kw>let</span> r <span class=op>=</span> <span class=func>fetch</span>(url)
-                    <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
+                <span class=kw>let</span> r <span class=op>=</span> <span class=func>fetch</span>(url) <span class=kw>otherwise</span> <span class=kw>pass</span> <span class=kw>back</span>
                 results.<span class=func>lock</span>().<span class=func>push</span>(r)
             }
         }
     }
     <span class=kw>return</span> <span class=kw>copy</span> results.<span class=func>lock</span>()
-}</code></pre></div></div></div></section><section id=guarantees><div class=holding-text><p class=thesis-statement>Quack narrows expressiveness to shrink the mental model. Some patterns
+}</code></pre></div></div><p class=sbs-note>No <code>async</code>/<code>await</code>. Any function can suspend — you
+don't split your codebase into sync and async halves. <code>parallel(p)</code>
+scopes all tasks to the block; children cannot outlive their parent.
+The compiler rejects shared mutable state without synchronisation,
+so <code>Mutex</code> is required, not optional.</p></div></section><section id=guarantees><div class=holding-text><p class=thesis-statement>Quack narrows expressiveness to shrink the mental model. Some patterns
 are intentionally inexpressible. The tradeoff: you can hold the entire
 language in your head, and the compiler handles the verification.</p><div class=thesis-guarantees><span>No use-after-free</span>
 <span>No data races</span>

@@ -312,32 +312,31 @@ p code, li code, td code {
   max-width: 700px;
 }
 
-.sbs-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: start;
-}
-
+.sbs-pair,
 .sbs-triple {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
-  align-items: start;
 }
 
-@media (max-width: 960px) {
-  .sbs-triple { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 760px) {
-  .sbs-pair { grid-template-columns: 1fr; }
+.sbs-block {
+  max-width: 640px;
+  width: 100%;
 }
 
 .sbs-block pre {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.65;
+}
+
+.sbs-note {
+  max-width: 640px;
+  margin: 1rem auto 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 /* Rust syntax highlighting */
